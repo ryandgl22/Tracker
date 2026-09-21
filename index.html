@@ -1,0 +1,108 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#17202a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Fitness Tracker"><title>Winter Fitness Tracker</title>
+<style>
+:root{--bg:#f5f7fa;--card:#fff;--ink:#17202a;--muted:#667085;--blue:#2457d6;--line:#e5e7eb;--green:#147a4a}
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;background:var(--bg);color:var(--ink)}
+header{background:#17202a;color:#fff;padding:18px max(18px,env(safe-area-inset-left));position:sticky;top:0;z-index:5}header h1{font-size:21px;margin:0}header small{color:#d5dae1}
+main{max-width:1180px;margin:auto;padding:18px}.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.card{background:#fff;border:1px solid var(--line);border-radius:15px;padding:17px;box-shadow:0 1px 2px #00000008}.metric b{display:block;font-size:24px;margin:5px 0}.muted{color:var(--muted);font-size:13px}
+nav{display:flex;gap:7px;overflow:auto;padding:14px 0;position:sticky;top:74px;background:var(--bg);z-index:4}button,.button{border:0;border-radius:10px;padding:11px 14px;font-weight:650;font:inherit;cursor:pointer;background:#e9edf5;color:var(--ink);white-space:nowrap}button.primary,nav button.active{background:var(--blue);color:white}
+.panel{display:none}.panel.active{display:block}.formgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}label{font-size:13px;font-weight:650}input,select,textarea{width:100%;font:inherit;padding:11px;margin-top:5px;border:1px solid #cfd5dd;border-radius:9px;background:white}textarea{min-height:80px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}.notice{background:#eef4ff;padding:12px;border-radius:10px;margin-bottom:14px}
+table{width:100%;border-collapse:collapse;font-size:13px}th,td{padding:9px;border-bottom:1px solid var(--line);text-align:left;white-space:nowrap}.scroll{overflow:auto}
+canvas{width:100%;height:270px;border-radius:8px}.analysisGrid{display:grid;grid-template-columns:1fr 1fr;gap:14px}.statline{display:flex;justify-content:space-between;border-bottom:1px solid var(--line);padding:9px 0}.good{color:var(--green);font-weight:700}.warn{font-weight:700}
+.backupStatus{font-size:18px;font-weight:700;margin:8px 0}.small{font-size:12px;color:var(--muted)}
+@media(max-width:800px){.metrics{grid-template-columns:1fr 1fr}.formgrid,.analysisGrid{grid-template-columns:1fr 1fr}}
+@media(max-width:560px){header{position:static}nav{top:0}.metrics{grid-template-columns:1fr 1fr}.formgrid,.analysisGrid{grid-template-columns:1fr}.card{padding:14px}main{padding:12px}.metric b{font-size:20px}nav button{padding:10px 12px}}
+</style></head><body>
+<header><h1>Winter Fitness Tracker</h1><small>Phone-first logging • laptop-friendly analysis</small></header><main>
+<div class="metrics">
+<div class="card metric"><span class="muted">7-day weight</span><b id="mw">—</b><span class="muted">trend average</span></div>
+<div class="card metric"><span class="muted">7-day calories</span><b id="mc">—</b><span class="muted">normal target ~2,200</span></div>
+<div class="card metric"><span class="muted">7-day protein</span><b id="mp">—</b><span class="muted">target ~170 g</span></div>
+<div class="card metric"><span class="muted">Last backup</span><b id="mb">Never</b><span class="muted">keep a portable copy</span></div>
+</div>
+<nav><button class="active" data-tab="log">Log</button><button data-tab="dashboard">Dashboard</button><button data-tab="analysis">Analysis</button><button data-tab="history">History</button><button data-tab="plan">Plan</button><button data-tab="backup">Backup & Transfer</button></nav>
+
+<section id="log" class="panel active card"><h2>Log today</h2>
+<div class="notice"><b>Normal day:</b> ~2,200 kcal • ~170 g protein • ~2.5 L fluids. Long/hard rides can appropriately need more fuel.</div>
+<form id="form"><div class="formgrid">
+<label>Date<input id="date" type="date" required></label><label>Morning weight (lb)<input id="weight" type="number" step=".1"></label><label>Waist (cm)<input id="waist" type="number" step=".1"></label>
+<label>Calories<input id="calories" type="number"></label><label>Protein (g)<input id="protein" type="number"></label><label>Fluids (L)<input id="water" type="number" step=".1"></label>
+<label>Steps<input id="steps" type="number"></label><label>Watch active kcal<input id="activeCal" type="number"></label><label>Watch total kcal<input id="totalCal" type="number"></label>
+<label>Training<select id="training"><option>Rest</option><option>Full Body A</option><option>Full Body B</option><option>Cycle</option><option>Run/Cardio</option><option>Walk/Recovery</option><option>Other</option></select></label>
+<label>Duration (min)<input id="duration" type="number"></label><label>Day type<select id="rideType"><option>Normal day</option><option>~1 hour cardio</option><option>Long/hard ride</option></select></label>
+<label>Creatine (g)<input id="creatine" type="number" step=".5" value="5"></label><label>Alcohol (drinks/units)<input id="alcohol" type="number" step=".1"></label><label>Sleep (hours)<input id="sleep" type="number" step=".1"></label>
+</div><label style="display:block;margin-top:12px">Notes<textarea id="notes"></textarea></label>
+<div class="actions"><button class="primary" type="submit">Save today</button><button type="button" id="clear">Clear</button></div><p id="saved" class="good"></p></form></section>
+
+<section id="dashboard" class="panel"><div class="analysisGrid">
+<div class="card"><h2>Weight trend</h2><canvas id="weightChart" width="900" height="270"></canvas></div>
+<div class="card"><h2>Recent summary</h2><div id="summary"></div></div></div></section>
+
+<section id="analysis" class="panel"><div class="card"><h2>Analysis</h2>
+<label>Period <select id="period" style="max-width:220px"><option value="7">Last 7 entries</option><option value="30" selected>Last 30 entries</option><option value="84d">Last 12 weeks</option><option value="all">All data</option></select></label>
+<div class="analysisGrid" style="margin-top:15px"><div><h3>Key averages</h3><div id="averages"></div></div><div><h3>What the data says</h3><div id="insights"></div></div></div>
+<h3>Calories over time</h3><canvas id="calChart" width="900" height="250"></canvas></div></section>
+
+<section id="history" class="panel card"><h2>History</h2><div class="scroll"><table><thead><tr><th>Date</th><th>Weight</th><th>Calories</th><th>Protein</th><th>Water</th><th>Steps</th><th>Training</th><th></th></tr></thead><tbody id="rows"></tbody></table></div></section>
+
+<section id="plan" class="panel card"><h2>Your winter plan</h2>
+<p><b>Nutrition:</b> ~2,200 kcal on normal days and ~170 g protein. Keep planned treats if they fit. Measure easy-to-underestimate extras such as cheese, peanut butter, oil, spreads and sauces.</p>
+<p><b>Strength:</b> Full Body A Monday/Thursday; Full Body B Tuesday/Friday; Wednesday recovery. Use double progression and generally finish working sets with 1–3 reps in reserve.</p>
+<p><b>Cycling:</b> Weekend cycling/cardio. Normal ~1-hour winter sessions broadly stay on the normal plan; genuinely long/hard rides should be fuelled appropriately.</p>
+<p><b>Recovery:</b> If a big Saturday ride leaves heavy fatigue on Monday, reduce leg work or use a recovery day. Cycling remains the main sporting priority.</p>
+<p><b>Progress:</b> Use 7-day weight averages, waist measurements every 1–2 weeks and progress photos around every 4 weeks. Review calories after 3–4 genuinely consistent weeks rather than reacting to individual weigh-ins.</p></section>
+
+<section id="backup" class="panel card"><h2>Backup & Transfer</h2>
+<p>This version stores your day-to-day entries on the device you're using. The backup file is what makes the tracker portable between your iPhone and laptop.</p>
+<div class="backupStatus" id="backupMessage">Last backup: never</div>
+<div class="actions"><button class="primary" id="exportBackup">Export full backup</button><label class="button">Import backup<input type="file" id="importBackup" accept=".json,application/json" style="display:none"></label><button id="exportCsv">Export CSV</button></div>
+<p class="small">Suggested workflow: mainly log on your phone → export a backup to Files/iCloud Drive/OneDrive → import it on your laptop when you want the larger analysis view. Import replaces the current device's dataset, so export the newer device first.</p>
+<p class="small">Browser/site data can be cleared, so the backup file is your durable copy. Keep a recent backup somewhere outside the browser.</p></section>
+</main>
+<script>
+const KEY="winterFitness.v3", BK="winterFitness.lastBackup";
+const F=["date","weight","waist","calories","protein","water","steps","activeCal","totalCal","training","duration","rideType","creatine","alcohol","sleep","notes"];
+const $=x=>document.getElementById(x); const load=()=>{try{return JSON.parse(localStorage.getItem(KEY)||"[]")}catch{return[]}};const save=x=>localStorage.setItem(KEY,JSON.stringify(x));
+function localToday(){let d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)} $("date").value=localToday();
+function num(v){let n=Number(v);return Number.isFinite(n)&&n>0?n:null} function avg(a,k){let v=a.map(x=>num(x[k])).filter(x=>x!==null);return v.length?v.reduce((s,x)=>s+x,0)/v.length:null}
+function fmt(v,s="",d=0){return v==null?"—":v.toFixed(d)+s}
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{document.querySelectorAll("nav button").forEach(x=>x.classList.remove("active"));b.classList.add("active");document.querySelectorAll(".panel").forEach(x=>x.classList.remove("active"));$(b.dataset.tab).classList.add("active");refresh()});
+$("form").onsubmit=e=>{e.preventDefault();let o={};F.forEach(k=>o[k]=$(k).value);let a=load().filter(x=>x.date!==o.date);a.push(o);a.sort((x,y)=>x.date.localeCompare(y.date));save(a);$("saved").textContent="Saved on this device ✓";refresh();setTimeout(()=>$("saved").textContent="",1600)};
+$("clear").onclick=()=>{$("form").reset();$("date").value=localToday();$("creatine").value=5};
+function lineChart(id,data,key,target){
+ let c=$(id),ctx=c.getContext("2d"),W=c.width,H=c.height;ctx.clearRect(0,0,W,H);let pts=data.filter(x=>num(x[key])!==null);
+ if(pts.length<2){ctx.fillStyle="#667085";ctx.font="16px Segoe UI";ctx.fillText("Add more entries to see this chart.",25,45);return}
+ let vals=pts.map(x=>Number(x[key])),mi=Math.min(...vals),ma=Math.max(...vals);if(mi===ma){mi-=1;ma+=1}
+ ctx.strokeStyle="#d8dde5";ctx.lineWidth=1;for(let i=0;i<4;i++){let y=20+i*(H-45)/3;ctx.beginPath();ctx.moveTo(30,y);ctx.lineTo(W-15,y);ctx.stroke()}
+ if(target){let y=20+(ma-target)*(H-45)/(ma-mi);if(y>=15&&y<=H-20){ctx.strokeStyle="#a0a7b2";ctx.setLineDash([6,6]);ctx.beginPath();ctx.moveTo(30,y);ctx.lineTo(W-15,y);ctx.stroke();ctx.setLineDash([])}}
+ ctx.strokeStyle="#2457d6";ctx.lineWidth=3;ctx.beginPath();pts.forEach((p,i)=>{let x=30+i*(W-50)/(pts.length-1),y=20+(ma-Number(p[key]))*(H-45)/(ma-mi);i?ctx.lineTo(x,y):ctx.moveTo(x,y)});ctx.stroke();
+}
+function selectedData(){let a=load().sort((x,y)=>x.date.localeCompare(y.date)),v=$("period").value;if(v==="all")return a;if(v==="84d"){let cut=new Date();cut.setDate(cut.getDate()-84);return a.filter(x=>new Date(x.date)>=cut)}return a.slice(-Number(v))}
+function statsHtml(a){return [["Weight",fmt(avg(a,"weight")," lb",1)],["Calories",fmt(avg(a,"calories")," kcal")],["Protein",fmt(avg(a,"protein")," g")],["Fluids",fmt(avg(a,"water")," L",1)],["Steps",fmt(avg(a,"steps"))],["Sleep",fmt(avg(a,"sleep")," h",1)]].map(x=>`<div class="statline"><span>${x[0]}</span><b>${x[1]}</b></div>`).join("")}
+function refresh(){
+ let a=load().sort((x,y)=>x.date.localeCompare(y.date)),r=a.slice(-7);$("mw").textContent=fmt(avg(r,"weight")," lb",1);$("mc").textContent=fmt(avg(r,"calories")," kcal");$("mp").textContent=fmt(avg(r,"protein")," g");
+ let bk=localStorage.getItem(BK);$("mb").textContent=bk?new Date(bk).toLocaleDateString():"Never";$("backupMessage").textContent="Last backup: "+(bk?new Date(bk).toLocaleString():"never");
+ $("rows").innerHTML=[...a].reverse().map(x=>`<tr><td>${x.date}</td><td>${x.weight||"—"}</td><td>${x.calories||"—"}</td><td>${x.protein||"—"}</td><td>${x.water||"—"}</td><td>${x.steps||"—"}</td><td>${x.training||"—"}</td><td><button onclick="del('${x.date}')">Delete</button></td></tr>`).join("");
+ $("summary").innerHTML=statsHtml(r);lineChart("weightChart",a.slice(-60),"weight");
+ let x=selectedData();$("averages").innerHTML=statsHtml(x);lineChart("calChart",x,"calories",2200);
+ let weights=x.filter(z=>num(z.weight)!==null),weekly=null;if(weights.length>1){let days=(new Date(weights.at(-1).date)-new Date(weights[0].date))/86400000;if(days>0)weekly=(Number(weights.at(-1).weight)-Number(weights[0].weight))*7/days}
+ let ins=[];if(weekly!==null){ins.push(`Recorded weight trend: <b>${weekly.toFixed(2)} lb/week</b>.`);if(weekly<=-1.5)ins.push("This is faster than the intended ~1 lb/week; recovery, hunger and performance are worth watching.");else if(weekly<=-.5)ins.push("This is broadly within the intended fat-loss range.");else if(weekly<0)ins.push("Weight is moving down, but more slowly than the rough target.");else ins.push("Weight is not trending down in this selected period.")}else ins.push("More weight entries are needed to estimate a weekly trend.");
+ let ac=avg(x,"calories"),ap=avg(x,"protein");if(ac)ins.push(`Average logged intake: <b>${ac.toFixed(0)} kcal</b>.`);if(ap)ins.push(`Average protein: <b>${ap.toFixed(0)} g</b> versus the ~170 g target.`);
+ $("insights").innerHTML=ins.map(t=>`<p>${t}</p>`).join("");
+}
+window.del=d=>{if(confirm("Delete "+d+"?")){save(load().filter(x=>x.date!==d));refresh()}}
+$("period").onchange=refresh;
+function dl(name,text,type){let a=document.createElement("a");a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
+$("exportBackup").onclick=()=>{let pack={app:"Winter Fitness Tracker",version:3,exportedAt:new Date().toISOString(),entries:load()};dl("winter-fitness-backup-"+localToday()+".json",JSON.stringify(pack,null,2),"application/json");localStorage.setItem(BK,new Date().toISOString());refresh()}
+$("importBackup").onchange=e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let j=JSON.parse(r.result),a=Array.isArray(j)?j:j.entries;if(!Array.isArray(a))throw Error();if(confirm(`Import ${a.length} entries and replace this device's current data?`)){save(a);refresh();alert("Backup imported successfully.")}}catch{alert("That file is not a valid tracker backup.")}};r.readAsText(f)}
+$("exportCsv").onclick=()=>{let esc=v=>'"'+String(v??"").replaceAll('"','""')+'"';let a=load();dl("winter-fitness-data-"+localToday()+".csv",[F.join(","),...a.map(x=>F.map(k=>esc(x[k])).join(","))].join("\n"),"text/csv")}
+refresh();
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load",()=>navigator.serviceWorker.register("./service-worker.js").catch(()=>{}));
+}
+</script></body></html>
